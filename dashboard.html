@@ -331,35 +331,29 @@
             padding: 4px 18px 14px;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             gap: 0;
+            overflow-y: auto;
         }
 
         .pipeline-stage {
             display: flex;
             align-items: center;
             gap: 14px;
-            padding: 10px 0;
+            padding: 12px 0;
             position: relative;
         }
-        .pipeline-stage:not(:last-child)::after {
-            content: '';
-            position: absolute;
-            left: 15px;
-            top: 36px;
-            bottom: -10px;
-            width: 2px;
-            background: var(--border);
+        .pipeline-stage:not(:last-child) {
+            border-bottom: 1px solid var(--border);
         }
 
         .pipeline-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
+            font-size: 15px;
             flex-shrink: 0;
             z-index: 1;
         }
@@ -372,10 +366,17 @@
             font-size: 12px;
             font-weight: 600;
             color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+
+        .pipeline-meta {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
         }
 
         .pipeline-count {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 800;
             letter-spacing: -0.03em;
             font-variant-numeric: tabular-nums;
@@ -388,18 +389,34 @@
             50% { opacity: 0.7; }
         }
 
+        .pipeline-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
         .pipeline-bar-track {
             width: 100%;
             height: 4px;
             background: rgba(255,255,255,0.04);
             border-radius: 2px;
-            margin-top: 4px;
+            margin-top: 6px;
             overflow: hidden;
         }
         .pipeline-bar-fill {
             height: 100%;
             border-radius: 2px;
             transition: width 1.5s ease;
+        }
+
+        .pipeline-conversion {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        .pipeline-conversion .rate {
+            color: var(--accent);
+            font-weight: 600;
         }
 
         /* ── Row 3: Bottom cards ── */
@@ -612,8 +629,8 @@
         <!-- Pipeline -->
         <div class="card">
             <div class="card-header">
-                <span class="card-title">AGM Pipeline</span>
-                <span class="card-badge live">Synced</span>
+                <span class="card-title">Sales Pipeline — Texas Turf</span>
+                <span class="card-badge live">Live</span>
             </div>
             <div class="pipeline-body" id="pipelineBody">
                 <!-- Populated by JS -->
@@ -755,11 +772,11 @@
 
     /* ── Pipeline ── */
     const stages = [
-        { name: 'New Lead',    count: 47,    color: 'var(--blue)',    bg: 'var(--blue-dim)',    pct: 100, active: true },
-        { name: 'Quote Sent',  count: 23,    color: 'var(--jobber)',  bg: 'var(--jobber-dim)',  pct: 49,  active: true },
-        { name: 'Follow-Up',   count: 12,    color: 'var(--warning)', bg: 'var(--warning-dim)', pct: 26,  active: true },
-        { name: 'Closed Won',  count: 1803,  color: 'var(--accent)',  bg: 'var(--accent-dim)',  pct: 59,  active: false, big: true },
-        { name: 'Closed Lost', count: 1241,  color: 'var(--text-muted)', bg: 'rgba(100,116,139,0.1)', pct: 41, active: false, muted: true },
+        { name: 'New Lead',      count: 47,   label: 'active now',        color: 'var(--blue)',       bg: 'var(--blue-dim)',          pct: 100, active: true,  icon: '&#11044;',  conversion: null },
+        { name: 'Quote Sent',    count: 23,   label: 'awaiting response', color: 'var(--jobber)',     bg: 'var(--jobber-dim)',        pct: 49,  active: true,  icon: '&#9993;',   conversion: '49% of leads quoted' },
+        { name: 'Follow-Up',     count: 12,   label: 'in sequence',       color: 'var(--warning)',    bg: 'var(--warning-dim)',       pct: 26,  active: true,  icon: '&#8635;',   conversion: 'Auto-chasing unanswered quotes' },
+        { name: 'Closed Won',    count: 1803, label: 'all-time jobs won', color: 'var(--accent)',     bg: 'var(--accent-dim)',        pct: 59,  active: false, icon: '&#9733;',   conversion: '<span class="rate">59%</span> win rate' },
+        { name: 'Closed Lost',   count: 1241, label: 'all-time lost',     color: 'var(--text-muted)', bg: 'rgba(100,116,139,0.1)',   pct: 41,  active: false, icon: '&mdash;',   conversion: null },
     ];
 
     function buildPipeline() {
@@ -767,14 +784,18 @@
         body.innerHTML = stages.map(s => `
             <div class="pipeline-stage">
                 <div class="pipeline-icon" style="background:${s.bg}; color:${s.color};">
-                    ${s.big ? '&#9733;' : s.muted ? '&mdash;' : '&#9679;'}
+                    ${s.icon}
                 </div>
                 <div class="pipeline-info" style="flex:1;">
                     <div class="pipeline-name">${s.name}</div>
-                    <div class="pipeline-count ${s.active ? 'active' : ''}" style="color:${s.color};" data-pipeline-target="${s.count}">0</div>
+                    <div class="pipeline-meta">
+                        <div class="pipeline-count ${s.active ? 'active' : ''}" style="color:${s.color};" data-pipeline-target="${s.count}">0</div>
+                        <div class="pipeline-label">${s.label}</div>
+                    </div>
                     <div class="pipeline-bar-track">
                         <div class="pipeline-bar-fill" style="background:${s.color}; width:0%;" data-bar-target="${s.pct}"></div>
                     </div>
+                    ${s.conversion ? `<div class="pipeline-conversion">${s.conversion}</div>` : ''}
                 </div>
             </div>
         `).join('');
