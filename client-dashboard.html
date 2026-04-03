@@ -103,8 +103,8 @@
   .stage[data-stage="closed_lost"] .stage-icon, .stage[data-stage="closed_lost"] .stage-bar { background:var(--red); }
   .stage[data-stage="closed_lost"] .stage-count { color:var(--red); }
 
-  /* Middle Grid */
-  .mid-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  /* Middle Grid — 3 panels */
+  .tri-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
 
   /* Activity Feed */
   .card { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; overflow:hidden; display:flex; flex-direction:column; }
@@ -147,6 +147,32 @@
   .wf-arrow { color:var(--text3); margin:0 2px; }
   .wf-pending .wf-check { background:var(--amber-dim); color:var(--amber); }
 
+  /* Conversion Funnel */
+  .funnel-body { padding:12px 18px 14px; display:flex; flex-direction:column; gap:6px; }
+  .funnel-step { display:flex; align-items:center; gap:12px; }
+  .funnel-bar-wrap { flex:1; height:28px; background:rgba(255,255,255,0.04); border-radius:6px; overflow:hidden; }
+  .funnel-bar { height:100%; border-radius:6px; transition:width 1.2s cubic-bezier(0.16,1,0.3,1); background:var(--blue); }
+  .funnel-bar.quoted { background:var(--amber); }
+  .funnel-bar.won { background:var(--accent); }
+  .funnel-label { font-size:12px; font-weight:600; color:var(--text2); width:55px; text-align:right; }
+  .funnel-count { font-size:14px; font-weight:800; color:var(--text); width:35px; font-variant-numeric:tabular-nums; }
+  .funnel-arrow { text-align:center; font-size:10px; color:var(--text3); line-height:1; margin:-2px 0; }
+  .funnel-rates { display:flex; gap:16px; margin-top:8px; padding-top:10px; border-top:1px solid var(--border); }
+  .funnel-rate { font-size:11px; color:var(--text3); }
+  .rate-val { font-weight:800; font-size:16px; color:var(--accent); margin-right:4px; }
+
+  /* Product Mix */
+  .product-body { padding:6px 18px 14px; display:flex; flex-direction:column; gap:4px; }
+  .product-row { display:grid; grid-template-columns:1fr 70px 80px; align-items:center; gap:8px; padding:7px 10px; border-radius:6px; background:var(--border2); }
+  .product-row:hover { background:rgba(255,255,255,0.04); }
+  .product-name { font-size:12px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .product-sqft { font-size:12px; font-weight:700; color:var(--cyan); text-align:right; font-variant-numeric:tabular-nums; }
+  .product-val { font-size:12px; font-weight:700; color:var(--accent); text-align:right; font-variant-numeric:tabular-nums; }
+  .product-header { font-size:10px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.05em; padding:4px 10px; }
+  .product-total { border-top:1px solid var(--border); margin-top:4px; padding-top:8px; }
+  .product-total .product-name { color:var(--text2); }
+  .product-empty { font-size:12px; color:var(--text3); padding:20px 10px; text-align:center; }
+
   /* Footer */
   .footer { text-align:center; font-size:11px; color:var(--text3); padding:20px 32px; border-top:1px solid var(--border); margin-top:8px; }
   .footer a { color:var(--text2); text-decoration:none; }
@@ -158,7 +184,7 @@
 
   @media(max-width:900px) {
     .metrics { grid-template-columns:repeat(2,1fr); }
-    .mid-grid { grid-template-columns:1fr; }
+    .tri-grid { grid-template-columns:1fr; }
     .stage { grid-template-columns:140px 50px 1fr 60px; }
     .main { padding:16px; }
     .header { padding:12px 16px; }
@@ -228,10 +254,10 @@
     </div>
   </div>
 
-  <!-- Middle: Feed + Health -->
-  <div class="mid-grid">
+  <!-- Middle: 3-panel row -->
+  <div class="tri-grid">
 
-    <!-- Activity Feed -->
+    <!-- Recent Activity -->
     <div class="card">
       <div class="card-head">
         <span class="card-title">Recent Activity</span>
@@ -244,52 +270,51 @@
       </div>
     </div>
 
-    <!-- Integration Health + Workflows -->
+    <!-- Conversion Funnel -->
     <div class="card">
       <div class="card-head">
-        <span class="card-title">Integration Health</span>
-        <span class="badge info" id="healthBadge">Checking...</span>
+        <span class="card-title">Conversion Funnel</span>
+        <span class="badge info">Pipeline</span>
       </div>
-      <div class="health-grid" id="healthGrid">
-        <div class="health-row">
-          <span class="health-label">Jobber Connection</span>
-          <span class="health-status" id="hJobber"><span class="health-check">...</span></span>
+      <div class="funnel-body" id="funnelBody">
+        <div class="funnel-step">
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar" id="fLeads" style="width:0%"></div>
+          </div>
+          <div class="funnel-label">Leads</div>
+          <div class="funnel-count" id="fLeadsCount">--</div>
         </div>
-        <div class="health-row">
-          <span class="health-label">AGM Connection</span>
-          <span class="health-status" id="hGHL"><span class="health-check">...</span></span>
+        <div class="funnel-arrow">&#9660;</div>
+        <div class="funnel-step">
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar quoted" id="fQuoted" style="width:0%"></div>
+          </div>
+          <div class="funnel-label">Quoted</div>
+          <div class="funnel-count" id="fQuotedCount">--</div>
         </div>
-        <div class="health-row">
-          <span class="health-label">Data Sync</span>
-          <span class="health-status" id="hRetry"><span class="health-check">...</span></span>
+        <div class="funnel-arrow">&#9660;</div>
+        <div class="funnel-step">
+          <div class="funnel-bar-wrap">
+            <div class="funnel-bar won" id="fWon" style="width:0%"></div>
+          </div>
+          <div class="funnel-label">Won</div>
+          <div class="funnel-count" id="fWonCount">--</div>
         </div>
-        <div class="health-row">
-          <span class="health-label">Last Activity</span>
-          <span class="health-status" id="hLastSync"><span class="health-check">...</span></span>
+        <div class="funnel-rates" id="funnelRates">
+          <div class="funnel-rate"><span class="rate-val" id="fQuoteRate">--</span> quote rate</div>
+          <div class="funnel-rate"><span class="rate-val" id="fWinRate">--</span> win rate</div>
         </div>
       </div>
+    </div>
 
-      <div class="card-head" style="border-top:1px solid var(--border); margin-top:4px;">
-        <span class="card-title">Active Workflows</span>
-        <span class="badge live">4 Live</span>
+    <!-- Product Mix -->
+    <div class="card">
+      <div class="card-head">
+        <span class="card-title">Product Mix</span>
+        <span class="badge info">Turf Types</span>
       </div>
-      <div class="wf-list">
-        <div class="wf-item">
-          <span class="wf-check">&#10003;</span>
-          WF1: Lead tagged <span class="wf-arrow">&rarr;</span> Create Jobber client
-        </div>
-        <div class="wf-item">
-          <span class="wf-check">&#10003;</span>
-          WF2: Quote sent <span class="wf-arrow">&rarr;</span> Pipeline update
-        </div>
-        <div class="wf-item">
-          <span class="wf-check">&#10003;</span>
-          WF3: Quote approved <span class="wf-arrow">&rarr;</span> Won + line items
-        </div>
-        <div class="wf-item">
-          <span class="wf-check">&#10003;</span>
-          WF4: Job complete <span class="wf-arrow">&rarr;</span> Review request
-        </div>
+      <div class="product-body" id="productBody">
+        <div class="feed-item shimmer" style="height:36px; border-radius:8px;">&nbsp;</div>
       </div>
     </div>
 
@@ -384,6 +409,13 @@
     if (pData.recent_activity) {
       lastRecentActivity = pData.recent_activity;
     }
+    // Build funnel and product mix
+    if (pData.funnel) {
+      buildFunnel(pData.funnel);
+    }
+    if (pData.product_mix !== undefined) {
+      buildProductMix(pData.product_mix);
+    }
     if (pData.stages) {
       Object.keys(pData.stages).forEach(k => {
         result[k] = pData.stages[k];
@@ -437,59 +469,62 @@
     }
   }
 
-  // ── Update health panel ──
-  function updateHealthPanel(health) {
-    const client = health && health.clients ? health.clients[CLIENT_SLUG] : null;
-    const hBadge = document.getElementById('healthBadge');
+  // ── Build conversion funnel ──
+  function buildFunnel(funnel) {
+    if (!funnel || !funnel.leads) return;
 
-    if (!client) {
-      hBadge.textContent = 'Unavailable';
-      hBadge.className = 'badge';
-      hBadge.style.background = 'var(--red-dim)';
-      hBadge.style.color = 'var(--red)';
+    const leads = funnel.leads;
+    const quoted = funnel.quoted;
+    const won = funnel.won;
+
+    document.getElementById('fLeadsCount').textContent = leads;
+    document.getElementById('fQuotedCount').textContent = quoted;
+    document.getElementById('fWonCount').textContent = won;
+
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        document.getElementById('fLeads').style.width = '100%';
+        document.getElementById('fQuoted').style.width = (leads > 0 ? quoted / leads * 100 : 0) + '%';
+        document.getElementById('fWon').style.width = (leads > 0 ? won / leads * 100 : 0) + '%';
+      }, 200);
+    });
+
+    document.getElementById('fQuoteRate').textContent = funnel.quote_rate + '%';
+    document.getElementById('fWinRate').textContent = funnel.win_rate + '%';
+  }
+
+  // ── Build product mix ──
+  function buildProductMix(products) {
+    const body = document.getElementById('productBody');
+
+    if (!products || products.length === 0) {
+      body.innerHTML = '<div class="product-empty">No turf product data yet.<br>Data populates when quotes are approved with turf type fields.</div>';
       return;
     }
 
-    // Jobber connection — client-friendly, no token details
-    const hJobber = document.getElementById('hJobber');
-    if (client.token_valid) {
-      hJobber.className = 'health-status ok';
-      hJobber.innerHTML = '<span class="health-check">&#10003;</span> Active';
-    } else {
-      hJobber.className = 'health-status warn';
-      hJobber.innerHTML = '<span class="health-check">&#9888;</span> Reconnecting...';
+    let totalSqft = 0;
+    let totalVal = 0;
+    products.forEach(p => { totalSqft += p.sqft; totalVal += p.value; });
+
+    let html = '<div class="product-row product-header"><div>Product</div><div style="text-align:right">Sq Ft</div><div style="text-align:right">Revenue</div></div>';
+
+    products.forEach(p => {
+      html += '<div class="product-row">' +
+        '<div class="product-name">' + p.name + '</div>' +
+        '<div class="product-sqft">' + (p.sqft > 0 ? p.sqft.toLocaleString() : '--') + '</div>' +
+        '<div class="product-val">$' + Math.round(p.value).toLocaleString() + '</div>' +
+      '</div>';
+    });
+
+    if (products.length > 1) {
+      html += '<div class="product-row product-total">' +
+        '<div class="product-name">Total</div>' +
+        '<div class="product-sqft">' + totalSqft.toLocaleString() + '</div>' +
+        '<div class="product-val">$' + Math.round(totalVal).toLocaleString() + '</div>' +
+      '</div>';
     }
 
-    // AGM connection
-    const hGHL = document.getElementById('hGHL');
-    hGHL.className = 'health-status ok';
-    hGHL.innerHTML = '<span class="health-check">&#10003;</span> Active';
-
-    // Data sync — client sees "All clear" or "Processing" — never dead letters
-    const hRetry = document.getElementById('hRetry');
-    const pending = client.pending_retries || 0;
-    if (pending === 0) {
-      hRetry.className = 'health-status ok';
-      hRetry.innerHTML = '<span class="health-check">&#10003;</span> All clear';
-    } else {
-      hRetry.className = 'health-status ok';
-      hRetry.innerHTML = '<span class="health-check">&#10003;</span> Processing';
-    }
-
-    // Last activity
-    const hLastSync = document.getElementById('hLastSync');
-    if (client.last_event_at) {
-      const ago = timeAgo(new Date(client.last_event_at));
-      hLastSync.className = 'health-status ok';
-      hLastSync.innerHTML = '<span class="health-check">&#10003;</span> ' + ago;
-    } else {
-      hLastSync.className = 'health-status ok';
-      hLastSync.innerHTML = '<span class="health-check">&#10003;</span> Waiting for first event';
-    }
-
-    // Badge — client always sees positive language
-    hBadge.textContent = 'All Systems Go';
-    hBadge.className = 'badge live';
+    body.innerHTML = html;
   }
 
   // ── Build pipeline (static for now — will wire to GHL API) ──
@@ -588,12 +623,11 @@
   async function init() {
     document.getElementById('clientName').textContent = CLIENT_NAME;
 
-    // Fetch health data
+    // Fetch health data (status badge only)
     const health = await fetchHealth();
     updateStatus(health);
-    updateHealthPanel(health);
 
-    // Fetch pipeline data — includes recent activity for the feed
+    // Fetch pipeline data — includes recent activity, funnel, and product mix
     const pipelineData = await fetchPipelineData();
     buildPipeline(pipelineData);
     buildActivityFeed(lastRecentActivity);
@@ -606,7 +640,6 @@
   setInterval(async () => {
     const health = await fetchHealth();
     updateStatus(health);
-    updateHealthPanel(health);
     const pData = await fetchPipelineData();
     buildPipeline(pData);
     buildActivityFeed(lastRecentActivity);

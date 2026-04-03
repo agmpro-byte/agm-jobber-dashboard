@@ -167,5 +167,13 @@
       "value": 0,
       "timestamp": "2026-03-25T00:00:00Z"
     }
-  ]
+  ],
+  "funnel": {
+    "leads": 53,
+    "quoted": 24,
+    "won": 10,
+    "quote_rate": 45.3,
+    "win_rate": 41.7
+  },
+  "product_mix": []
 }
