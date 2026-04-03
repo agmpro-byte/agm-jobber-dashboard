@@ -385,9 +385,12 @@
   }
 
   // ── Fetch real metrics from event store ──
-  async function fetchMetrics() {
+  async function fetchMetrics(dateRange) {
     try {
-      const resp = await fetch(METRICS_URL + '?client=' + CLIENT_SLUG + '&_=' + Date.now());
+      let url = METRICS_URL + '?client=' + CLIENT_SLUG + '&_=' + Date.now();
+      if (dateRange && dateRange.from) url += '&from=' + dateRange.from;
+      if (dateRange && dateRange.to) url += '&to=' + dateRange.to;
+      const resp = await fetch(url);
       if (!resp.ok) throw new Error('Metrics ' + resp.status);
       return await resp.json();
     } catch (e) {
@@ -768,9 +771,14 @@
       const rangeLabels = { all: 'All Time', ytd: '2026 YTD', q1: 'Q1 2026', '30d': 'Last 30 Days', '7d': 'Last 7 Days' };
       document.getElementById('funnelRange').textContent = rangeLabels[activeRange] || 'All Time';
       // Re-fetch with date range
-      const pipelineData = await fetchPipelineData(getDateRange(activeRange));
+      const dateRange = getDateRange(activeRange);
+      const [pipelineData, metrics] = await Promise.all([
+        fetchPipelineData(dateRange),
+        fetchMetrics(dateRange),
+      ]);
       buildPipeline(pipelineData);
       buildActivityFeed(lastRecentActivity);
+      applyMetrics(metrics);
     });
   });
 
@@ -801,7 +809,7 @@
     const [health, pData, metrics] = await Promise.all([
       fetchHealth(),
       fetchPipelineData(getDateRange(activeRange)),
-      fetchMetrics(),
+      fetchMetrics(getDateRange(activeRange)),
     ]);
     updateStatus(health);
     buildPipeline(pData);
