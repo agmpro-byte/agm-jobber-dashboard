@@ -310,6 +310,7 @@
   const CLIENT_SLUG = 'texas-turf';
   const CLIENT_NAME = 'Texas Turf Company';
   const HEALTH_URL = 'https://agm-pro--agm-health-health.modal.run';
+  const PIPELINE_URL = 'https://agm-pro--agm-health-pipeline-data.modal.run';
 
   const PIPELINE_STAGES = [
     { key: 'lead',                  name: 'Lead',                  id: 'e8e6bfc4-06b9-471a-a09c-516f5d435c30' },
@@ -335,6 +336,76 @@
       console.error('Health fetch failed:', e);
       return null;
     }
+  }
+
+  // ── Fetch pipeline data ──
+  async function fetchPipelineData() {
+    const empty = {
+      lead: { count: 0, value: 0 }, two_way_conversation: { count: 0, value: 0 },
+      preliminary_quote: { count: 0, value: 0 }, site_evaluation: { count: 0, value: 0 },
+      design_preparation: { count: 0, value: 0 }, quote_sent: { count: 0, value: 0 },
+      negotiation: { count: 0, value: 0 }, quote_approved: { count: 0, value: 0 },
+      job_complete: { count: 0, value: 0 }, closed_lost: { count: 0, value: 0 },
+    };
+
+    // Try Modal endpoint first (live data)
+    try {
+      const resp = await fetch(PIPELINE_URL + '?client=' + CLIENT_SLUG + '&_=' + Date.now());
+      if (resp.ok) {
+        const pData = await resp.json();
+        return applyPipelineData(pData, empty);
+      }
+    } catch(e) {
+      console.warn('Modal pipeline endpoint unavailable, trying static JSON:', e);
+    }
+
+    // Fall back to static JSON
+    try {
+      const resp = await fetch('pipeline-data.json?_=' + Date.now());
+      if (resp.ok) {
+        const pData = await resp.json();
+        return applyPipelineData(pData, empty);
+      }
+    } catch(e) {
+      console.warn('Static pipeline data unavailable:', e);
+    }
+
+    // No data available
+    document.getElementById('mPipelineValue').textContent = '--';
+    document.getElementById('mOpenQuotes').textContent = '--';
+    return empty;
+  }
+
+  function applyPipelineData(pData, result) {
+    if (pData.stages) {
+      Object.keys(pData.stages).forEach(k => {
+        result[k] = pData.stages[k];
+      });
+    }
+    if (pData.total_pipeline_value !== undefined) {
+      document.getElementById('mPipelineValue').textContent = '$' + Math.round(pData.total_pipeline_value).toLocaleString();
+    }
+    if (pData.open_quotes !== undefined) {
+      document.getElementById('mOpenQuotes').textContent = pData.open_quotes.toLocaleString();
+    }
+    if (pData.won_count !== undefined) {
+      document.getElementById('mWonMonth').textContent = pData.won_count.toLocaleString();
+      document.getElementById('mWonMonthSub').textContent = '$' + Math.round(pData.won_value || 0).toLocaleString() + ' total value';
+      document.getElementById('mWonMonth').closest('.metric').querySelector('.metric-label').textContent = 'Won / Approved';
+    }
+    if (pData.jobs_complete !== undefined && pData.jobs_complete > 0) {
+      document.getElementById('mJobsComplete').textContent = pData.jobs_complete.toLocaleString();
+    }
+    if (pData.generated_at) {
+      const gen = new Date(pData.generated_at);
+      document.getElementById('pipelineUpdated').textContent = 'Data: ' + gen.toLocaleDateString() + ' ' + gen.toLocaleTimeString();
+    }
+    if (pData.total_opportunities) {
+      document.getElementById('mJobsComplete').textContent = pData.total_opportunities.toLocaleString();
+      document.getElementById('mJobsComplete').closest('.metric').querySelector('.metric-label').textContent = 'Total Opportunities';
+      document.getElementById('mJobsComplete').closest('.metric').querySelector('.metric-sub').textContent = 'In Residential Sales pipeline';
+    }
+    return result;
   }
 
   // ── Update status badge ──
@@ -555,47 +626,8 @@
     updateHealthPanel(health);
     buildActivityFeed(health);
 
-    // Pipeline — start with placeholder counts, will wire to GHL API
-    // For now show structure. Real data requires server-side GHL API call.
-    const pipelineData = {
-      lead: { count: 0, value: 0 },
-      two_way_conversation: { count: 0, value: 0 },
-      preliminary_quote: { count: 0, value: 0 },
-      site_evaluation: { count: 0, value: 0 },
-      design_preparation: { count: 0, value: 0 },
-      quote_sent: { count: 0, value: 0 },
-      negotiation: { count: 0, value: 0 },
-      quote_approved: { count: 0, value: 0 },
-      job_complete: { count: 0, value: 0 },
-      closed_lost: { count: 0, value: 0 },
-    };
-
-    // Try to get pipeline data if we have a data endpoint
-    try {
-      const pResp = await fetch('pipeline-data.json?_=' + Date.now());
-      if (pResp.ok) {
-        const pData = await pResp.json();
-        if (pData.stages) {
-          Object.keys(pData.stages).forEach(k => {
-            if (pipelineData[k] !== undefined) {
-              pipelineData[k] = pData.stages[k];
-            }
-          });
-        }
-        // Update top metrics from pipeline data
-        if (pData.total_pipeline_value) {
-          document.getElementById('mPipelineValue').textContent = '$' + pData.total_pipeline_value.toLocaleString();
-        }
-        if (pData.open_quotes !== undefined) {
-          document.getElementById('mOpenQuotes').textContent = pData.open_quotes.toLocaleString();
-        }
-      }
-    } catch(e) {
-      // Pipeline data file not available yet — that's fine
-      document.getElementById('mPipelineValue').textContent = '--';
-      document.getElementById('mOpenQuotes').textContent = '--';
-    }
-
+    // Fetch pipeline data — try Modal endpoint first, fall back to static JSON
+    const pipelineData = await fetchPipelineData();
     buildPipeline(pipelineData);
   }
 
@@ -603,12 +635,13 @@
   init();
 
   // Auto-refresh every 5 minutes
-  setInterval(() => {
-    fetchHealth().then(health => {
-      updateStatus(health);
-      updateHealthPanel(health);
-      buildActivityFeed(health);
-    });
+  setInterval(async () => {
+    const health = await fetchHealth();
+    updateStatus(health);
+    updateHealthPanel(health);
+    buildActivityFeed(health);
+    const pData = await fetchPipelineData();
+    buildPipeline(pData);
   }, 5 * 60 * 1000);
 
 })();

@@ -1,0 +1,49 @@
+{
+  "client": "texas-turf",
+  "client_name": "Texas Turf Company",
+  "pipeline_name": "Residential Sales",
+  "generated_at": "2026-04-03T15:55:27.582188Z",
+  "total_opportunities": 53,
+  "total_pipeline_value": 33068,
+  "open_quotes": 15,
+  "won_count": 10,
+  "won_value": 15734,
+  "jobs_complete": 0,
+  "stages": {
+    "two_way_conversation": {
+      "count": 6,
+      "value": 17600,
+      "name": "Two Way Conversation"
+    },
+    "quote_approved": {
+      "count": 9,
+      "value": 11234,
+      "name": "Quote Approved - Won"
+    },
+    "quote_sent": {
+      "count": 11,
+      "value": 1234,
+      "name": "Quote Sent"
+    },
+    "site_evaluation": {
+      "count": 16,
+      "value": 13500,
+      "name": "Site Evaluation"
+    },
+    "lead": {
+      "count": 5,
+      "value": 0,
+      "name": "Lead"
+    },
+    "preliminary_quote": {
+      "count": 2,
+      "value": 3000,
+      "name": "Preliminary Quote"
+    },
+    "negotiation": {
+      "count": 4,
+      "value": 0,
+      "name": "Negotiation"
+    }
+  }
+}
