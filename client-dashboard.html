@@ -275,7 +275,7 @@
     <div class="card">
       <div class="card-head">
         <span class="card-title">Conversion Funnel</span>
-        <span class="badge info">Pipeline</span>
+        <span class="badge info" id="funnelRange">All Time</span>
       </div>
       <div class="funnel-body" id="funnelBody">
         <div class="funnel-step">
@@ -345,6 +345,7 @@
   // ── Configuration ──
   const CLIENT_SLUG = 'texas-turf';
   const CLIENT_NAME = 'Texas Turf Company';
+  const CLIENT_TZ = 'America/Chicago'; // Client's local timezone (CST/CDT)
   const HEALTH_URL = 'https://agm-pro--agm-health-health.modal.run';
   const PIPELINE_URL = 'https://agm-pro--agm-health-pipeline-data.modal.run';
 
@@ -502,9 +503,9 @@
   function updateSyncTime(source) {
     const el = document.getElementById('lastSync');
     const now = new Date();
-    const dateStr = now.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
-    const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' });
-    el.textContent = dateStr + ', ' + timeStr + (source === 'static' ? ' (cached)' : '');
+    const opts = { timeZone: CLIENT_TZ, month: 'numeric', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', second: '2-digit' };
+    const formatted = now.toLocaleString('en-US', opts);
+    el.textContent = formatted + ' CT' + (source === 'static' ? ' (cached)' : '');
   }
 
   // ── Build pipeline — rich visual format ──
@@ -750,6 +751,9 @@
       document.querySelectorAll('.time-filter').forEach(b => b.classList.remove('active'));
       this.classList.add('active');
       activeRange = this.dataset.range;
+      // Update funnel label to show active range
+      const rangeLabels = { all: 'All Time', ytd: '2026 YTD', q1: 'Q1 2026', '30d': 'Last 30 Days', '7d': 'Last 7 Days' };
+      document.getElementById('funnelRange').textContent = rangeLabels[activeRange] || 'All Time';
       // Re-fetch with date range
       const pipelineData = await fetchPipelineData(getDateRange(activeRange));
       buildPipeline(pipelineData);
