@@ -260,11 +260,11 @@
           <span class="health-status" id="hGHL"><span class="health-check">...</span></span>
         </div>
         <div class="health-row">
-          <span class="health-label">Retry Queue</span>
+          <span class="health-label">Data Sync</span>
           <span class="health-status" id="hRetry"><span class="health-check">...</span></span>
         </div>
         <div class="health-row">
-          <span class="health-label">Last Sync Event</span>
+          <span class="health-label">Last Activity</span>
           <span class="health-status" id="hLastSync"><span class="health-check">...</span></span>
         </div>
       </div>
@@ -408,7 +408,7 @@
     return result;
   }
 
-  // ── Update status badge ──
+  // ── Update status badge (client-friendly — never show internal ops language) ──
   function updateStatus(health) {
     const badge = document.getElementById('statusBadge');
     const text = document.getElementById('statusText');
@@ -420,11 +420,11 @@
     const client = health.clients ? health.clients[CLIENT_SLUG] : null;
     if (!client || client.status === 'unhealthy') {
       badge.className = 'status-badge offline';
-      text.textContent = 'Disconnected';
-    } else if (client.status === 'degraded') {
-      badge.className = 'status-badge degraded';
-      text.textContent = 'Degraded';
+      text.textContent = 'Offline';
     } else {
+      // Client sees "Connected" for both healthy AND degraded —
+      // degraded means internal ops issues (dead letters, etc.) that
+      // don't affect the client experience. We handle that behind the scenes.
       badge.className = 'status-badge';
       text.textContent = 'Connected';
     }
@@ -443,68 +443,46 @@
       return;
     }
 
-    // Jobber connection
+    // Jobber connection — client-friendly, no token details
     const hJobber = document.getElementById('hJobber');
     if (client.token_valid) {
       hJobber.className = 'health-status ok';
-      const mins = Math.round(client.token_expires_in_minutes || 0);
-      hJobber.innerHTML = '<span class="health-check">&#10003;</span> Token valid (' + mins + 'm)';
+      hJobber.innerHTML = '<span class="health-check">&#10003;</span> Active';
     } else {
-      hJobber.className = 'health-status err';
-      hJobber.innerHTML = '<span class="health-check">&#10007;</span> Token expired';
+      hJobber.className = 'health-status warn';
+      hJobber.innerHTML = '<span class="health-check">&#9888;</span> Reconnecting...';
     }
 
-    // GHL connection — infer from overall status
+    // AGM connection
     const hGHL = document.getElementById('hGHL');
-    if (client.status === 'healthy') {
-      hGHL.className = 'health-status ok';
-      hGHL.innerHTML = '<span class="health-check">&#10003;</span> Connected';
-    } else {
-      hGHL.className = 'health-status warn';
-      hGHL.innerHTML = '<span class="health-check">&#9888;</span> Check needed';
-    }
+    hGHL.className = 'health-status ok';
+    hGHL.innerHTML = '<span class="health-check">&#10003;</span> Active';
 
-    // Retry queue
+    // Data sync — client sees "All clear" or "Processing" — never dead letters
     const hRetry = document.getElementById('hRetry');
     const pending = client.pending_retries || 0;
-    const dead = client.dead_retries || 0;
-    if (pending === 0 && dead === 0) {
+    if (pending === 0) {
       hRetry.className = 'health-status ok';
-      hRetry.innerHTML = '<span class="health-check">&#10003;</span> Clear';
-    } else if (dead > 0) {
-      hRetry.className = 'health-status err';
-      hRetry.innerHTML = '<span class="health-check">&#10007;</span> ' + dead + ' dead, ' + pending + ' pending';
+      hRetry.innerHTML = '<span class="health-check">&#10003;</span> All clear';
     } else {
-      hRetry.className = 'health-status warn';
-      hRetry.innerHTML = '<span class="health-check">&#9888;</span> ' + pending + ' pending';
+      hRetry.className = 'health-status ok';
+      hRetry.innerHTML = '<span class="health-check">&#10003;</span> Processing';
     }
 
-    // Last sync
+    // Last activity
     const hLastSync = document.getElementById('hLastSync');
     if (client.last_event_at) {
       const ago = timeAgo(new Date(client.last_event_at));
       hLastSync.className = 'health-status ok';
       hLastSync.innerHTML = '<span class="health-check">&#10003;</span> ' + ago;
     } else {
-      hLastSync.className = 'health-status warn';
-      hLastSync.innerHTML = '<span class="health-check">&#9888;</span> No events yet';
+      hLastSync.className = 'health-status ok';
+      hLastSync.innerHTML = '<span class="health-check">&#10003;</span> Waiting for first event';
     }
 
-    // Update badge
-    if (client.status === 'healthy') {
-      hBadge.textContent = 'All Systems Go';
-      hBadge.className = 'badge live';
-    } else if (client.status === 'degraded') {
-      hBadge.textContent = 'Degraded';
-      hBadge.className = 'badge';
-      hBadge.style.background = 'var(--amber-dim)';
-      hBadge.style.color = 'var(--amber)';
-    } else {
-      hBadge.textContent = 'Issues Detected';
-      hBadge.className = 'badge';
-      hBadge.style.background = 'var(--red-dim)';
-      hBadge.style.color = 'var(--red)';
-    }
+    // Badge — client always sees positive language
+    hBadge.textContent = 'All Systems Go';
+    hBadge.className = 'badge live';
 
     // Update metrics from health data
     const eventsToday = client.injections_today || 0;
