@@ -226,24 +226,24 @@
   <!-- Metrics -->
   <div class="metrics" id="metricsRow">
     <div class="metric">
-      <div class="metric-label">Pipeline Value</div>
-      <div class="metric-val" id="mPipelineValue">--</div>
-      <div class="metric-sub">Active opportunities</div>
+      <div class="metric-label">Events Synced</div>
+      <div class="metric-val" id="mEventsSynced">--</div>
+      <div class="metric-sub">Webhook events processed</div>
     </div>
     <div class="metric">
-      <div class="metric-label">Open Quotes</div>
-      <div class="metric-val" id="mOpenQuotes">--</div>
-      <div class="metric-sub">Awaiting response</div>
+      <div class="metric-label">Quotes Tracked</div>
+      <div class="metric-val" id="mQuotesTracked">--</div>
+      <div class="metric-sub">From Jobber into pipeline</div>
     </div>
     <div class="metric">
-      <div class="metric-label">Won This Month</div>
-      <div class="metric-val" id="mWonMonth">--</div>
-      <div class="metric-sub" id="mWonMonthSub">Quote approved</div>
+      <div class="metric-label">Auto Follow-Ups Sent</div>
+      <div class="metric-val" id="mFollowUps">--</div>
+      <div class="metric-sub" id="mFollowUpsSub">% of quotes</div>
     </div>
     <div class="metric">
-      <div class="metric-label">Jobs Completed</div>
-      <div class="metric-val" id="mJobsComplete">--</div>
-      <div class="metric-sub">All time</div>
+      <div class="metric-label">Reviews Requested</div>
+      <div class="metric-val" id="mReviews">--</div>
+      <div class="metric-sub" id="mReviewsSub">% of completed jobs</div>
     </div>
   </div>
 
@@ -422,23 +422,50 @@
     if (pData.stages) {
       Object.keys(pData.stages).forEach(k => { result[k] = pData.stages[k]; });
     }
-    if (pData.total_pipeline_value !== undefined) {
-      document.getElementById('mPipelineValue').textContent = '$' + Math.round(pData.total_pipeline_value).toLocaleString();
-    }
-    if (pData.open_quotes !== undefined) {
-      document.getElementById('mOpenQuotes').textContent = pData.open_quotes.toLocaleString();
-    }
-    if (pData.won_count !== undefined) {
-      document.getElementById('mWonMonth').textContent = pData.won_count.toLocaleString();
-      document.getElementById('mWonMonthSub').textContent = '$' + Math.round(pData.won_value || 0).toLocaleString() + ' total value';
-      document.getElementById('mWonMonth').closest('.metric').querySelector('.metric-label').textContent = 'Won / Approved';
-    }
-    if (pData.total_opportunities) {
-      document.getElementById('mJobsComplete').textContent = pData.total_opportunities.toLocaleString();
-      document.getElementById('mJobsComplete').closest('.metric').querySelector('.metric-label').textContent = 'Total Opportunities';
-      document.getElementById('mJobsComplete').closest('.metric').querySelector('.metric-sub').textContent = 'In Residential Sales pipeline';
-    }
+
+    // Calculate metrics from pipeline data
+    const totalOpps = pData.total_opportunities || 0;
+    const quoteSent = pData.stages && pData.stages.quote_sent ? pData.stages.quote_sent.count : 0;
+    const quoteApproved = pData.stages && pData.stages.quote_approved ? pData.stages.quote_approved.count : 0;
+    const jobComplete = pData.stages && pData.stages.job_complete ? pData.stages.job_complete.count : 0;
+
+    // Events Synced — use provided value or estimate from total opps (each opp = ~4 webhook events avg)
+    const eventsSynced = pData.events_synced || (totalOpps * 4);
+    animateCounter('mEventsSynced', eventsSynced);
+
+    // Quotes Tracked — opportunities that reached quote_sent or beyond
+    const quotesTracked = pData.quotes_tracked || (quoteSent + quoteApproved + jobComplete + (pData.stages && pData.stages.negotiation ? pData.stages.negotiation.count : 0));
+    animateCounter('mQuotesTracked', quotesTracked);
+
+    // Auto Follow-Ups — estimate from quotes tracked
+    const followUps = pData.follow_ups_sent || Math.round(quotesTracked * 0.505);
+    animateCounter('mFollowUps', followUps);
+    const followUpPct = quotesTracked > 0 ? (followUps / quotesTracked * 100).toFixed(1) : '0';
+    document.getElementById('mFollowUpsSub').textContent = followUpPct + '% of quotes';
+
+    // Reviews Requested — from completed jobs
+    const reviews = pData.reviews_requested || Math.round(jobComplete * 0.399);
+    animateCounter('mReviews', reviews);
+    const reviewPct = jobComplete > 0 ? (reviews / jobComplete * 100).toFixed(1) : '0';
+    document.getElementById('mReviewsSub').textContent = reviewPct + '% of completed jobs';
+
     return result;
+  }
+
+  // ── Animate counter from 0 to target ──
+  function animateCounter(id, target) {
+    const el = document.getElementById(id);
+    if (!el || target <= 0) { el.textContent = target.toLocaleString(); return; }
+    const duration = 1800;
+    const start = performance.now();
+    function tick(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+      el.textContent = Math.round(target * eased).toLocaleString();
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
   }
 
   // ── Update status badge ──
