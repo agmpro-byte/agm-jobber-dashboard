@@ -15,6 +15,7 @@
     --accent-glow: rgba(34,197,94,0.3);
     --jobber: #7c3aed;
     --jobber-dim: rgba(124,58,237,0.15);
+    --jobber-glow: rgba(124,58,237,0.25);
     --blue: #3b82f6;
     --blue-dim: rgba(59,130,246,0.15);
     --amber: #f59e0b;
@@ -41,12 +42,26 @@
   .header-right { display:flex; align-items:center; gap:20px; }
   .client-name { font-size:13px; color:var(--text2); font-weight:500; }
   .status-badge { display:flex; align-items:center; gap:7px; background:var(--accent-dim); border:1px solid rgba(34,197,94,0.2); padding:5px 14px; border-radius:20px; font-size:11px; font-weight:600; color:var(--accent); letter-spacing:0.05em; text-transform:uppercase; }
-  .status-badge.degraded { background:var(--amber-dim); border-color:rgba(245,158,11,0.2); color:var(--amber); }
   .status-badge.offline { background:var(--red-dim); border-color:rgba(239,68,68,0.2); color:var(--red); }
   .status-dot { width:7px; height:7px; border-radius:50%; background:currentColor; animation:pulse 2s ease-in-out infinite; }
   @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 var(--accent-glow)} 50%{box-shadow:0 0 0 5px transparent} }
-  .sync-info { font-size:10px; color:var(--text3); text-align:right; line-height:1.4; }
-  .sync-time { color:var(--text2); font-weight:500; }
+
+  /* Sub-header: client name + time filters + sync */
+  .sub-header { display:flex; justify-content:space-between; align-items:center; padding:12px 32px; background:rgba(17,24,39,0.6); border-bottom:1px solid var(--border); }
+  .sub-header-left { }
+  .sub-header-title { font-size:18px; font-weight:800; color:var(--jobber); letter-spacing:-0.02em; }
+  .sub-header-label { font-size:11px; color:var(--text3); font-weight:500; }
+  .sub-header-center { display:flex; align-items:center; gap:0; }
+  .time-filter { padding:6px 14px; font-size:11px; font-weight:600; color:var(--text3); background:none; border:1px solid var(--border); cursor:pointer; transition:all 0.2s; letter-spacing:0.02em; }
+  .time-filter:first-child { border-radius:8px 0 0 8px; }
+  .time-filter:last-child { border-radius:0 8px 8px 0; }
+  .time-filter:not(:first-child) { border-left:none; }
+  .time-filter:hover { color:var(--text2); background:rgba(255,255,255,0.03); }
+  .time-filter.active { background:var(--jobber-dim); color:var(--jobber); border-color:rgba(124,58,237,0.3); }
+  .time-filter.active + .time-filter { border-left-color:rgba(124,58,237,0.3); }
+  .sub-header-right { text-align:right; }
+  .sync-label { font-size:10px; color:var(--text3); }
+  .sync-time { font-size:11px; color:var(--text2); font-weight:600; }
 
   /* Main */
   .main { padding:20px 32px 32px; max-width:1400px; margin:0 auto; display:flex; flex-direction:column; gap:16px; }
@@ -68,42 +83,28 @@
   .metric:nth-child(4) .metric-val { color:var(--amber); }
   .metric-sub { font-size:11px; color:var(--text3); margin-top:4px; }
 
-  /* Pipeline Section */
-  .section-title { font-size:14px; font-weight:700; color:var(--text); margin-bottom:2px; }
-  .section-sub { font-size:11px; color:var(--text3); margin-bottom:12px; }
-
+  /* Pipeline Card — rich format */
   .pipeline-card { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:20px 24px; }
-  .pipeline-funnel { display:flex; flex-direction:column; gap:6px; }
-  .stage { display:grid; grid-template-columns:180px 60px 1fr 80px; align-items:center; gap:12px; padding:8px 12px; border-radius:8px; transition:background 0.15s; }
-  .stage:hover { background:var(--border2); }
-  .stage-name { font-size:13px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:8px; }
-  .stage-icon { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-  .stage-count { font-size:18px; font-weight:800; font-variant-numeric:tabular-nums; text-align:right; }
-  .stage-bar-track { height:6px; background:rgba(255,255,255,0.04); border-radius:3px; overflow:hidden; }
-  .stage-bar { height:100%; border-radius:3px; transition:width 1.2s cubic-bezier(0.16,1,0.3,1); width:0; }
-  .stage-value { font-size:12px; font-weight:600; color:var(--text2); text-align:right; font-variant-numeric:tabular-nums; }
+  .pipeline-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+  .pipeline-title { font-size:14px; font-weight:700; }
+  .pipeline-badge { font-size:10px; font-weight:600; padding:4px 12px; border-radius:12px; background:var(--accent-dim); color:var(--accent); text-transform:uppercase; letter-spacing:0.04em; }
+  .pipeline-stages { display:flex; flex-direction:column; }
 
-  /* Stage colors */
-  .stage[data-stage="lead"] .stage-icon, .stage[data-stage="lead"] .stage-bar { background:var(--blue); }
-  .stage[data-stage="lead"] .stage-count { color:var(--blue); }
-  .stage[data-stage="two_way_conversation"] .stage-icon, .stage[data-stage="two_way_conversation"] .stage-bar { background:var(--cyan); }
-  .stage[data-stage="two_way_conversation"] .stage-count { color:var(--cyan); }
-  .stage[data-stage="preliminary_quote"] .stage-icon, .stage[data-stage="preliminary_quote"] .stage-bar { background:#818cf8; }
-  .stage[data-stage="preliminary_quote"] .stage-count { color:#818cf8; }
-  .stage[data-stage="site_evaluation"] .stage-icon, .stage[data-stage="site_evaluation"] .stage-bar { background:var(--jobber); }
-  .stage[data-stage="site_evaluation"] .stage-count { color:var(--jobber); }
-  .stage[data-stage="design_preparation"] .stage-icon, .stage[data-stage="design_preparation"] .stage-bar { background:#a78bfa; }
-  .stage[data-stage="design_preparation"] .stage-count { color:#a78bfa; }
-  .stage[data-stage="quote_sent"] .stage-icon, .stage[data-stage="quote_sent"] .stage-bar { background:var(--amber); }
-  .stage[data-stage="quote_sent"] .stage-count { color:var(--amber); }
-  .stage[data-stage="negotiation"] .stage-icon, .stage[data-stage="negotiation"] .stage-bar { background:#fb923c; }
-  .stage[data-stage="negotiation"] .stage-count { color:#fb923c; }
-  .stage[data-stage="quote_approved"] .stage-icon, .stage[data-stage="quote_approved"] .stage-bar { background:var(--accent); }
-  .stage[data-stage="quote_approved"] .stage-count { color:var(--accent); }
-  .stage[data-stage="job_complete"] .stage-icon, .stage[data-stage="job_complete"] .stage-bar { background:#34d399; }
-  .stage[data-stage="job_complete"] .stage-count { color:#34d399; }
-  .stage[data-stage="closed_lost"] .stage-icon, .stage[data-stage="closed_lost"] .stage-bar { background:var(--red); }
-  .stage[data-stage="closed_lost"] .stage-count { color:var(--red); }
+  .p-stage { display:flex; align-items:center; gap:14px; padding:14px 0; position:relative; }
+  .p-stage:not(:last-child) { border-bottom:1px solid var(--border); }
+  .p-stage-icon { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:16px; flex-shrink:0; }
+  .p-stage-info { flex:1; min-width:0; }
+  .p-stage-name { font-size:13px; font-weight:600; color:var(--text); margin-bottom:3px; }
+  .p-stage-meta { display:flex; align-items:baseline; gap:8px; }
+  .p-stage-count { font-size:24px; font-weight:800; letter-spacing:-0.03em; font-variant-numeric:tabular-nums; }
+  .p-stage-count.active { animation:soft-pulse 3s ease-in-out infinite; }
+  @keyframes soft-pulse { 0%,100%{opacity:1} 50%{opacity:0.7} }
+  .p-stage-label { font-size:11px; color:var(--text3); font-weight:500; }
+  .p-stage-bar { width:100%; height:4px; background:rgba(255,255,255,0.04); border-radius:2px; margin-top:6px; overflow:hidden; }
+  .p-stage-bar-fill { height:100%; border-radius:2px; transition:width 1.5s cubic-bezier(0.16,1,0.3,1); width:0; }
+  .p-stage-context { font-size:11px; color:var(--text3); margin-top:4px; }
+  .p-stage-context .rate { color:var(--accent); font-weight:600; }
+  .p-stage-value { font-size:13px; font-weight:700; text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; flex-shrink:0; min-width:80px; }
 
   /* Middle Grid — 3 panels */
   .tri-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
@@ -121,33 +122,17 @@
   .feed::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
   .feed-item { display:flex; align-items:flex-start; gap:10px; padding:8px 10px; border-radius:8px; background:var(--border2); transition:background 0.2s; }
   .feed-item:hover { background:rgba(255,255,255,0.04); }
+  .feed-item.highlight { background:var(--accent-dim); border:1px solid rgba(34,197,94,0.12); }
   .feed-dot { width:6px; height:6px; border-radius:50%; margin-top:5px; flex-shrink:0; }
   .feed-dot.green { background:var(--accent); box-shadow:0 0 6px var(--accent-glow); }
   .feed-dot.blue { background:var(--blue); box-shadow:0 0 6px rgba(59,130,246,0.3); }
-  .feed-dot.purple { background:var(--jobber); box-shadow:0 0 6px rgba(124,58,237,0.25); }
+  .feed-dot.purple { background:var(--jobber); box-shadow:0 0 6px var(--jobber-glow); }
   .feed-dot.amber { background:var(--amber); box-shadow:0 0 6px rgba(245,158,11,0.3); }
   .feed-dot.red { background:var(--red); box-shadow:0 0 6px rgba(239,68,68,0.3); }
   .feed-text { font-size:12px; color:var(--text2); line-height:1.4; flex:1; }
   .feed-text strong { color:var(--text); font-weight:600; }
   .feed-time { font-size:10px; color:var(--text3); white-space:nowrap; margin-top:2px; }
   .feed-amount { color:var(--accent); font-weight:700; }
-
-  /* Automation & Health */
-  .health-grid { display:flex; flex-direction:column; gap:6px; padding:0 18px 14px; }
-  .health-row { display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-radius:8px; background:var(--border2); }
-  .health-label { font-size:12px; color:var(--text2); }
-  .health-status { font-size:11px; font-weight:600; display:flex; align-items:center; gap:6px; }
-  .health-status.ok { color:var(--accent); }
-  .health-status.warn { color:var(--amber); }
-  .health-status.err { color:var(--red); }
-  .health-check { font-size:10px; }
-
-  /* Workflows */
-  .wf-list { padding:0 18px 14px; display:flex; flex-direction:column; gap:4px; }
-  .wf-item { display:flex; align-items:center; gap:10px; padding:8px 12px; border-radius:8px; background:var(--border2); font-size:12px; color:var(--text2); }
-  .wf-check { width:20px; height:20px; border-radius:6px; background:var(--accent-dim); color:var(--accent); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; }
-  .wf-arrow { color:var(--text3); margin:0 2px; }
-  .wf-pending .wf-check { background:var(--amber-dim); color:var(--amber); }
 
   /* Conversion Funnel */
   .funnel-body { padding:12px 18px 14px; display:flex; flex-direction:column; gap:6px; }
@@ -187,14 +172,14 @@
   @media(max-width:900px) {
     .metrics { grid-template-columns:repeat(2,1fr); }
     .tri-grid { grid-template-columns:1fr; }
-    .stage { grid-template-columns:140px 50px 1fr 60px; }
+    .sub-header { flex-direction:column; gap:10px; align-items:flex-start; }
     .main { padding:16px; }
     .header { padding:12px 16px; }
   }
   @media(max-width:600px) {
     .metrics { grid-template-columns:1fr; }
-    .stage { grid-template-columns:120px 40px 1fr; }
-    .stage-value { display:none; }
+    .sub-header-center { flex-wrap:wrap; }
+    .time-filter { font-size:10px; padding:5px 10px; }
   }
 </style>
 </head>
@@ -208,17 +193,31 @@
     </div>
   </div>
   <div class="header-right">
-    <span class="client-name" id="clientName">Texas Turf Company</span>
     <div class="status-badge" id="statusBadge">
       <span class="status-dot"></span>
       <span id="statusText">Connecting...</span>
     </div>
-    <div class="sync-info">
-      <div>Last sync: <span class="sync-time" id="lastSync">--</span></div>
-      <div>Auto-refresh every 5 min</div>
-    </div>
   </div>
 </header>
+
+<!-- Sub-header: Client name + Time filters + Sync clock -->
+<div class="sub-header">
+  <div class="sub-header-left">
+    <div class="sub-header-title" id="clientName">Texas Turf Company</div>
+    <div class="sub-header-label">Sales Performance Dashboard</div>
+  </div>
+  <div class="sub-header-center">
+    <button class="time-filter active" data-range="all">All Time</button>
+    <button class="time-filter" data-range="ytd">2026 YTD</button>
+    <button class="time-filter" data-range="q1">Q1 2026</button>
+    <button class="time-filter" data-range="30d">Last 30d</button>
+    <button class="time-filter" data-range="7d">Last 7d</button>
+  </div>
+  <div class="sub-header-right">
+    <div class="sync-label">Updated</div>
+    <div class="sync-time" id="lastSync">--</div>
+  </div>
+</div>
 
 <main class="main">
 
@@ -243,6 +242,17 @@
       <div class="metric-label">Jobs Completed</div>
       <div class="metric-val" id="mJobsComplete">--</div>
       <div class="metric-sub">All time</div>
+    </div>
+  </div>
+
+  <!-- Sales Pipeline — rich visual format -->
+  <div class="pipeline-card">
+    <div class="pipeline-header">
+      <div class="pipeline-title">Sales Pipeline</div>
+      <div class="pipeline-badge" id="pipelineBadge">Live</div>
+    </div>
+    <div class="pipeline-stages" id="pipelineStages">
+      <!-- Populated by JS -->
     </div>
   </div>
 
@@ -312,20 +322,6 @@
 
   </div>
 
-  <!-- Sales Pipeline -->
-  <div class="pipeline-card">
-    <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:14px;">
-      <div>
-        <div class="section-title">Sales Pipeline</div>
-        <div class="section-sub">Residential Sales — 10 stages</div>
-      </div>
-      <div style="font-size:11px; color:var(--text3);" id="pipelineUpdated">Loading...</div>
-    </div>
-    <div class="pipeline-funnel" id="pipelineFunnel">
-      <!-- Populated by JS -->
-    </div>
-  </div>
-
 </main>
 
 <footer class="footer">
@@ -337,32 +333,35 @@
   'use strict';
 
   // ── Configuration ──
-  // Template variables — swap these per client
   const CLIENT_SLUG = 'texas-turf';
   const CLIENT_NAME = 'Texas Turf Company';
   const HEALTH_URL = 'https://agm-pro--agm-health-health.modal.run';
   const PIPELINE_URL = 'https://agm-pro--agm-health-pipeline-data.modal.run';
 
+  // Pipeline stages with visual config — icons, colors, labels, context
   const PIPELINE_STAGES = [
-    { key: 'lead',                  name: 'Lead',                  id: 'e8e6bfc4-06b9-471a-a09c-516f5d435c30' },
-    { key: 'two_way_conversation',  name: 'Two Way Conversation',  id: '2515486c-6da1-4655-8b01-3eaeac8c2977' },
-    { key: 'preliminary_quote',     name: 'Preliminary Quote',     id: '01f3f8c8-5fa0-4260-9781-c3e4d749ff14' },
-    { key: 'site_evaluation',       name: 'Site Evaluation',       id: 'd152dfed-781d-4b00-868e-26c513e934f1' },
-    { key: 'design_preparation',    name: 'Design Preparation',    id: 'd0babb76-cba9-465b-8e1b-2c1f5b763a9a' },
-    { key: 'quote_sent',            name: 'Quote Sent',            id: '061e2e51-84c0-48d7-a0b1-8b460b038a51' },
-    { key: 'negotiation',           name: 'Negotiation',           id: '3493d150-da41-4278-a5b1-e962f45d1676' },
-    { key: 'quote_approved',        name: 'Quote Approved',        id: 'ec163aa6-e70d-42e2-af88-c398c018ffaa' },
-    { key: 'job_complete',          name: 'Job Complete',           id: 'ad716081-9dc3-4b7f-9614-fe25be0f4d72' },
-    { key: 'closed_lost',           name: 'Closed Lost',           id: '92686ed1-4f1e-4e1f-829c-d075e8d2f2f9' },
+    { key: 'lead',                  name: 'Lead',                  icon: '&#11044;',  color: 'var(--blue)',    bg: 'var(--blue-dim)',    label: 'active now',          context: null,                                    active: true },
+    { key: 'two_way_conversation',  name: 'Two Way Conversation',  icon: '&#128172;', color: 'var(--cyan)',    bg: 'var(--cyan-dim)',    label: 'engaged',             context: null,                                    active: true },
+    { key: 'preliminary_quote',     name: 'Preliminary Quote',     icon: '&#128203;', color: '#818cf8',        bg: 'rgba(129,140,248,0.15)', label: 'estimating',     context: null,                                    active: true },
+    { key: 'site_evaluation',       name: 'Site Evaluation',       icon: '&#128205;', color: 'var(--jobber)',  bg: 'var(--jobber-dim)',  label: 'scheduled',           context: null,                                    active: true },
+    { key: 'design_preparation',    name: 'Design Preparation',    icon: '&#9998;',   color: '#a78bfa',        bg: 'rgba(167,139,250,0.15)', label: 'in design',     context: null,                                    active: true },
+    { key: 'quote_sent',            name: 'Quote Sent',            icon: '&#9993;',   color: 'var(--amber)',   bg: 'var(--amber-dim)',   label: 'awaiting response',   context: '_quote_rate',                           active: true },
+    { key: 'negotiation',           name: 'Negotiation',           icon: '&#8635;',   color: '#fb923c',        bg: 'rgba(251,146,60,0.15)', label: 'in discussion',  context: 'Active price negotiations',              active: true },
+    { key: 'quote_approved',        name: 'Quote Approved',        icon: '&#9733;',   color: 'var(--accent)',  bg: 'var(--accent-dim)',  label: 'won',                 context: '_win_rate',                             active: false },
+    { key: 'job_complete',          name: 'Job Complete',           icon: '&#10003;',  color: '#34d399',        bg: 'rgba(52,211,153,0.15)', label: 'completed',      context: null,                                    active: false },
+    { key: 'closed_lost',           name: 'Closed Lost',           icon: '&mdash;',   color: 'var(--text3)',   bg: 'rgba(100,116,139,0.1)', label: 'lost',           context: null,                                    active: false },
   ];
 
-  // ── Health endpoint fetch ──
+  // ── State ──
+  let lastRecentActivity = [];
+  let allPipelineData = null; // raw data for time filtering
+
+  // ── Fetch health (status badge only) ──
   async function fetchHealth() {
     try {
       const resp = await fetch(HEALTH_URL + '?_=' + Date.now());
-      if (!resp.ok) throw new Error('Health endpoint ' + resp.status);
-      const data = await resp.json();
-      return data;
+      if (!resp.ok) throw new Error('Health ' + resp.status);
+      return await resp.json();
     } catch (e) {
       console.error('Health fetch failed:', e);
       return null;
@@ -371,13 +370,8 @@
 
   // ── Fetch pipeline data ──
   async function fetchPipelineData() {
-    const empty = {
-      lead: { count: 0, value: 0 }, two_way_conversation: { count: 0, value: 0 },
-      preliminary_quote: { count: 0, value: 0 }, site_evaluation: { count: 0, value: 0 },
-      design_preparation: { count: 0, value: 0 }, quote_sent: { count: 0, value: 0 },
-      negotiation: { count: 0, value: 0 }, quote_approved: { count: 0, value: 0 },
-      job_complete: { count: 0, value: 0 }, closed_lost: { count: 0, value: 0 },
-    };
+    const empty = {};
+    PIPELINE_STAGES.forEach(s => { empty[s.key] = { count: 0, value: 0 }; });
 
     let staticData = null;
 
@@ -394,48 +388,35 @@
       const resp = await fetch(PIPELINE_URL + '?client=' + CLIENT_SLUG + '&_=' + Date.now());
       if (resp.ok) {
         const pData = await resp.json();
-        // If Modal returns empty product_mix but static has data, use static's
         if ((!pData.product_mix || pData.product_mix.length === 0) && staticData && staticData.product_mix && staticData.product_mix.length > 0) {
           pData.product_mix = staticData.product_mix;
         }
+        allPipelineData = pData;
         updateSyncTime();
         return applyPipelineData(pData, empty);
       }
     } catch(e) {
-      console.warn('Modal pipeline endpoint unavailable, using static JSON:', e);
+      console.warn('Modal unavailable, using static JSON:', e);
     }
 
     // Fall back to static JSON
     if (staticData) {
+      allPipelineData = staticData;
       updateSyncTime('static');
       return applyPipelineData(staticData, empty);
     }
 
-    // No data available
     document.getElementById('mPipelineValue').textContent = '--';
     document.getElementById('mOpenQuotes').textContent = '--';
     return empty;
   }
 
-  // Store recent activity from last pipeline fetch
-  let lastRecentActivity = [];
-
   function applyPipelineData(pData, result) {
-    // Capture recent activity for the feed
-    if (pData.recent_activity) {
-      lastRecentActivity = pData.recent_activity;
-    }
-    // Build funnel and product mix
-    if (pData.funnel) {
-      buildFunnel(pData.funnel);
-    }
-    if (pData.product_mix !== undefined) {
-      buildProductMix(pData.product_mix);
-    }
+    if (pData.recent_activity) lastRecentActivity = pData.recent_activity;
+    if (pData.funnel) buildFunnel(pData.funnel);
+    if (pData.product_mix !== undefined) buildProductMix(pData.product_mix);
     if (pData.stages) {
-      Object.keys(pData.stages).forEach(k => {
-        result[k] = pData.stages[k];
-      });
+      Object.keys(pData.stages).forEach(k => { result[k] = pData.stages[k]; });
     }
     if (pData.total_pipeline_value !== undefined) {
       document.getElementById('mPipelineValue').textContent = '$' + Math.round(pData.total_pipeline_value).toLocaleString();
@@ -448,13 +429,6 @@
       document.getElementById('mWonMonthSub').textContent = '$' + Math.round(pData.won_value || 0).toLocaleString() + ' total value';
       document.getElementById('mWonMonth').closest('.metric').querySelector('.metric-label').textContent = 'Won / Approved';
     }
-    if (pData.jobs_complete !== undefined && pData.jobs_complete > 0) {
-      document.getElementById('mJobsComplete').textContent = pData.jobs_complete.toLocaleString();
-    }
-    if (pData.generated_at) {
-      const gen = new Date(pData.generated_at);
-      document.getElementById('pipelineUpdated').textContent = 'Data: ' + gen.toLocaleDateString() + ' ' + gen.toLocaleTimeString();
-    }
     if (pData.total_opportunities) {
       document.getElementById('mJobsComplete').textContent = pData.total_opportunities.toLocaleString();
       document.getElementById('mJobsComplete').closest('.metric').querySelector('.metric-label').textContent = 'Total Opportunities';
@@ -463,7 +437,7 @@
     return result;
   }
 
-  // ── Update status badge (client-friendly — never show internal ops language) ──
+  // ── Update status badge ──
   function updateStatus(health) {
     const badge = document.getElementById('statusBadge');
     const text = document.getElementById('statusText');
@@ -477,21 +451,84 @@
       badge.className = 'status-badge offline';
       text.textContent = 'Offline';
     } else {
-      // Client sees "Connected" for both healthy AND degraded —
-      // degraded means internal ops issues (dead letters, etc.) that
-      // don't affect the client experience. We handle that behind the scenes.
       badge.className = 'status-badge';
       text.textContent = 'Connected';
     }
   }
 
+  // ── Update sync timestamp ──
+  function updateSyncTime(source) {
+    const el = document.getElementById('lastSync');
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+    const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+    el.textContent = dateStr + ', ' + timeStr + (source === 'static' ? ' (cached)' : '');
+  }
+
+  // ── Build pipeline — rich visual format ──
+  function buildPipeline(pipelineData) {
+    const container = document.getElementById('pipelineStages');
+    const totalLeads = PIPELINE_STAGES.reduce((sum, s) => {
+      const d = pipelineData ? pipelineData[s.key] : null;
+      return sum + (d ? d.count : 0);
+    }, 0);
+    const maxCount = Math.max(...PIPELINE_STAGES.map(s => {
+      const d = pipelineData ? pipelineData[s.key] : null;
+      return d ? d.count : 0;
+    }), 1);
+
+    // Calculate rates for context lines
+    const quoteSentCount = pipelineData && pipelineData.quote_sent ? pipelineData.quote_sent.count : 0;
+    const wonCount = pipelineData && pipelineData.quote_approved ? pipelineData.quote_approved.count : 0;
+    const quoteRate = totalLeads > 0 ? Math.round(quoteSentCount / totalLeads * 100) : 0;
+    const winRate = totalLeads > 0 ? Math.round(wonCount / totalLeads * 100) : 0;
+
+    container.innerHTML = PIPELINE_STAGES.map(s => {
+      const d = pipelineData ? pipelineData[s.key] : { count: 0, value: 0 };
+      const count = d.count || 0;
+      const value = d.value || 0;
+      const pct = maxCount > 0 ? (count / maxCount * 100) : 0;
+      const valStr = value > 0 ? '$' + value.toLocaleString() : '';
+
+      // Build context line
+      let contextHtml = '';
+      if (s.context === '_quote_rate') {
+        contextHtml = '<div class="p-stage-context"><span class="rate">' + quoteRate + '%</span> of leads quoted</div>';
+      } else if (s.context === '_win_rate') {
+        contextHtml = '<div class="p-stage-context"><span class="rate">' + winRate + '%</span> win rate</div>';
+      } else if (s.context) {
+        contextHtml = '<div class="p-stage-context">' + s.context + '</div>';
+      }
+
+      return '<div class="p-stage">' +
+        '<div class="p-stage-icon" style="background:' + s.bg + '; color:' + s.color + ';">' + s.icon + '</div>' +
+        '<div class="p-stage-info">' +
+          '<div class="p-stage-name">' + s.name + '</div>' +
+          '<div class="p-stage-meta">' +
+            '<div class="p-stage-count ' + (s.active && count > 0 ? 'active' : '') + '" style="color:' + s.color + ';">' + count + '</div>' +
+            '<div class="p-stage-label">' + s.label + '</div>' +
+          '</div>' +
+          '<div class="p-stage-bar"><div class="p-stage-bar-fill" style="background:' + s.color + ';" data-pct="' + pct + '"></div></div>' +
+          contextHtml +
+        '</div>' +
+        (valStr ? '<div class="p-stage-value" style="color:' + s.color + ';">' + valStr + '</div>' : '') +
+      '</div>';
+    }).join('');
+
+    // Animate bars
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        container.querySelectorAll('.p-stage-bar-fill').forEach(bar => {
+          bar.style.width = bar.dataset.pct + '%';
+        });
+      }, 100);
+    });
+  }
+
   // ── Build conversion funnel ──
   function buildFunnel(funnel) {
     if (!funnel || !funnel.leads) return;
-
-    const leads = funnel.leads;
-    const quoted = funnel.quoted;
-    const won = funnel.won;
+    const leads = funnel.leads, quoted = funnel.quoted, won = funnel.won;
 
     document.getElementById('fLeadsCount').textContent = leads;
     document.getElementById('fQuotedCount').textContent = quoted;
@@ -518,12 +555,10 @@
       return;
     }
 
-    let totalSqft = 0;
-    let totalVal = 0;
+    let totalSqft = 0, totalVal = 0;
     products.forEach(p => { totalSqft += p.sqft; totalVal += p.value; });
 
     let html = '<div class="product-row product-header"><div>Product</div><div style="text-align:right">Sq Ft</div><div style="text-align:right">Revenue</div></div>';
-
     products.forEach(p => {
       html += '<div class="product-row">' +
         '<div class="product-name">' + p.name + '</div>' +
@@ -539,46 +574,10 @@
         '<div class="product-val">$' + Math.round(totalVal).toLocaleString() + '</div>' +
       '</div>';
     }
-
     body.innerHTML = html;
   }
 
-  // ── Build pipeline (static for now — will wire to GHL API) ──
-  function buildPipeline(pipelineData) {
-    const funnel = document.getElementById('pipelineFunnel');
-    const maxCount = Math.max(...PIPELINE_STAGES.map(s => {
-      const d = pipelineData ? pipelineData[s.key] : null;
-      return d ? d.count : 0;
-    }), 1);
-
-    funnel.innerHTML = PIPELINE_STAGES.map(s => {
-      const d = pipelineData ? pipelineData[s.key] : { count: 0, value: 0 };
-      const count = d.count || 0;
-      const value = d.value || 0;
-      const pct = maxCount > 0 ? (count / maxCount * 100) : 0;
-      const valStr = value > 0 ? '$' + value.toLocaleString() : '--';
-
-      return '<div class="stage" data-stage="' + s.key + '">' +
-        '<div class="stage-name"><span class="stage-icon"></span>' + s.name + '</div>' +
-        '<div class="stage-count">' + count + '</div>' +
-        '<div class="stage-bar-track"><div class="stage-bar" data-pct="' + pct + '"></div></div>' +
-        '<div class="stage-value">' + valStr + '</div>' +
-      '</div>';
-    }).join('');
-
-    // Animate bars
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        funnel.querySelectorAll('.stage-bar').forEach(bar => {
-          bar.style.width = bar.dataset.pct + '%';
-        });
-      }, 100);
-    });
-
-    document.getElementById('pipelineUpdated').textContent = 'Updated: ' + new Date().toLocaleTimeString();
-  }
-
-  // ── Build activity feed from real opportunity data ──
+  // ── Build activity feed ──
   function buildActivityFeed(recentActivity) {
     const feed = document.getElementById('activityFeed');
 
@@ -587,7 +586,6 @@
       return;
     }
 
-    // Map stage keys to colors and action descriptions
     const stageStyle = {
       lead:                  { color: 'blue',   action: 'New lead' },
       two_way_conversation:  { color: 'blue',   action: 'In conversation' },
@@ -606,16 +604,18 @@
       const name = item.name || 'Unknown';
       const valStr = item.value > 0 ? ' &mdash; <span class="feed-amount">$' + Math.round(item.value).toLocaleString() + '</span>' : '';
       const ts = item.timestamp ? timeAgo(new Date(item.timestamp)) : '';
+      const isWin = item.stage_key === 'quote_approved' && item.value > 0;
 
       return {
         color: style.color,
         text: '<strong>' + name + '</strong> &mdash; ' + style.action + valStr,
         time: ts,
+        highlight: isWin,
       };
     });
 
     feed.innerHTML = events.map(ev =>
-      '<div class="feed-item">' +
+      '<div class="feed-item' + (ev.highlight ? ' highlight' : '') + '">' +
         '<span class="feed-dot ' + ev.color + '"></span>' +
         '<span class="feed-text">' + ev.text + '</span>' +
         '<span class="feed-time">' + ev.time + '</span>' +
@@ -635,28 +635,28 @@
     return days + 'd ago';
   }
 
-  // ── Update sync timestamp ──
-  function updateSyncTime(source) {
-    const el = document.getElementById('lastSync');
-    const now = new Date();
-    el.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + (source === 'static' ? ' (cached)' : '');
-  }
+  // ── Time filter buttons ──
+  document.querySelectorAll('.time-filter').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.time-filter').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      // Time filtering will be wired to backend date ranges
+      // For now, all filters show current data (All Time snapshot)
+    });
+  });
 
   // ── Init ──
   async function init() {
     document.getElementById('clientName').textContent = CLIENT_NAME;
 
-    // Fetch health data (status badge only)
     const health = await fetchHealth();
     updateStatus(health);
 
-    // Fetch pipeline data — includes recent activity, funnel, and product mix
     const pipelineData = await fetchPipelineData();
     buildPipeline(pipelineData);
     buildActivityFeed(lastRecentActivity);
   }
 
-  // Run
   init();
 
   // Auto-refresh every 5 minutes
