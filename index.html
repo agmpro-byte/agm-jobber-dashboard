@@ -65,6 +65,41 @@
   /* Main */
   .main { padding:20px 32px 32px; max-width:1400px; margin:0 auto; display:flex; flex-direction:column; gap:16px; }
 
+  /* === Sales Performance Reports (TTR section) === */
+  .ttr-section { padding:18px 0; border-bottom:1px solid var(--border); }
+  .ttr-section:last-of-type { border-bottom:none; }
+  .ttr-section-title { font-size:13px; font-weight:700; color:var(--text); margin-bottom:12px; letter-spacing:-0.01em; }
+  .ttr-section-sub { font-size:11px; font-weight:400; color:var(--text3); }
+  .ttr-pipeline-name { font-size:11px; font-weight:600; color:var(--jobber); margin:14px 0 6px; text-transform:uppercase; letter-spacing:0.06em; }
+  .ttr-pipeline-name:first-child { margin-top:0; }
+  .ttr-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .ttr-table th { text-align:left; padding:8px 10px; border-bottom:1px solid var(--border); color:var(--text3); font-weight:500; text-transform:uppercase; font-size:10px; letter-spacing:0.05em; }
+  .ttr-table th.num { text-align:right; }
+  .ttr-table td { padding:8px 10px; border-bottom:1px solid var(--border2); color:var(--text); }
+  .ttr-table tbody tr:hover { background:rgba(255,255,255,0.02); }
+  .ttr-table td.num { text-align:right; font-variant-numeric:tabular-nums; font-weight:500; }
+  .ttr-bar { position:relative; text-align:right; font-variant-numeric:tabular-nums; padding:8px 14px 8px 10px; min-width:80px; }
+  .ttr-bar .fill { position:absolute; left:0; top:5px; bottom:5px; border-radius:3px; z-index:0; opacity:0.32; }
+  .ttr-bar .val { position:relative; z-index:1; font-weight:500; }
+  .ttr-bar.calls  .fill { background:var(--blue); }
+  .ttr-bar.sms    .fill { background:var(--accent); }
+  .ttr-bar.emails .fill { background:#a78bfa; }
+  .ttr-bar.appts  .fill { background:var(--amber); }
+  .ttr-bar.new    .fill { background:var(--accent); }
+  .ttr-bar.moved  .fill { background:var(--blue); }
+  .ttr-bar.lost   .fill { background:var(--red); }
+  .ttr-bar.open   .fill { background:var(--text3); }
+  .ttr-bar.leads  .fill { background:var(--accent); }
+  .ttr-bar.opps   .fill { background:var(--blue); }
+  .ttr-bar.created .fill { background:var(--accent); }
+  .ttr-bar.openq   .fill { background:var(--blue); }
+  .ttr-bar.lostq   .fill { background:var(--red); }
+  .ttr-bar.activities .fill { background:#a78bfa; }
+  .ttr-pending { background:var(--amber-dim); color:var(--amber); padding:2px 8px; border-radius:4px; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.04em; }
+  .ttr-stale-badge { color:var(--amber); font-weight:600; }
+  .ttr-empty { color:var(--text3); font-size:12px; padding:14px; text-align:center; font-style:italic; }
+  .ttr-meta { color:var(--text3); font-size:10px; text-align:right; margin-top:14px; }
+
   /* Metrics Row */
   .metrics { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
   .metric { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:16px 20px; position:relative; overflow:hidden; transition:border-color 0.3s; }
@@ -329,6 +364,42 @@
     <div class="product-body" id="productBody">
       <div class="feed-item shimmer" style="height:36px; border-radius:8px;">&nbsp;</div>
     </div>
+  </div>
+
+  <!-- ============ SALES PERFORMANCE REPORTS ============ -->
+  <!-- Reactive to top-of-page time filter -->
+  <div class="card">
+    <div class="card-head">
+      <span class="card-title">Sales Performance Reports</span>
+      <span class="badge info" id="reportsRangeLabel">All time</span>
+    </div>
+
+    <div class="ttr-section">
+      <div class="ttr-section-title">Pipeline Opportunity Report — by pipeline &amp; rep</div>
+      <div id="ttrPipeline"></div>
+    </div>
+
+    <div class="ttr-section">
+      <div class="ttr-section-title">Sales Activity by User</div>
+      <div id="ttrSalesActivity"></div>
+    </div>
+
+    <div class="ttr-section">
+      <div class="ttr-section-title">Lead Source Report</div>
+      <div id="ttrLeadSource"></div>
+    </div>
+
+    <div class="ttr-section">
+      <div class="ttr-section-title">Salesperson Performance</div>
+      <div id="ttrSalesperson"></div>
+    </div>
+
+    <div class="ttr-section">
+      <div class="ttr-section-title">Stale Opportunities <span class="ttr-section-sub">(open, not updated 7+ days — not affected by time filter)</span></div>
+      <div id="ttrStale"></div>
+    </div>
+
+    <div class="ttr-meta" id="ttrMeta">Loading…</div>
   </div>
 
 </main>
@@ -779,8 +850,178 @@
       buildPipeline(pipelineData);
       buildActivityFeed(lastRecentActivity);
       applyMetrics(metrics);
+      // Cascade to TTR sales reports
+      renderTTR(activeRange);
     });
   });
+
+  // ============ SALES PERFORMANCE REPORTS (TTR) ============
+  // Pulls https://troy-byte.github.io/texas-turf-reports/data.json (multi-window)
+  // and renders into the new section. Reactive to top-of-page time filters.
+  const TTR_DATA_URL = 'https://troy-byte.github.io/texas-turf-reports/data.json';
+  let ttrData = null;
+
+  // Map dashboard filter range -> TTR window key
+  const TTR_RANGE_MAP = {
+    '7d': '7d',
+    '30d': '30d',
+    'q1': 'quarter',
+    'ytd': 'ytd',
+    'all': 'ytd',  // fall back to YTD for "all"
+  };
+
+  async function fetchTTRData() {
+    try {
+      const r = await fetch(TTR_DATA_URL + '?_=' + Date.now());
+      if (!r.ok) throw new Error('TTR ' + r.status);
+      ttrData = await r.json();
+      return ttrData;
+    } catch (e) {
+      console.warn('TTR fetch failed:', e);
+      return null;
+    }
+  }
+
+  function ttrFmt(n) { return (n == null ? 0 : n).toLocaleString(); }
+  function ttrMaxOf(rows, key) {
+    let m = 0;
+    rows.forEach(r => { const v = r[key]; if (typeof v === 'number' && v > m) m = v; });
+    return m;
+  }
+  function ttrBarCell(value, max, kind) {
+    if (value === null || value === undefined) {
+      return '<td class="num"><span class="ttr-pending">pending</span></td>';
+    }
+    const pct = max > 0 ? Math.round((value / max) * 100) : 0;
+    return '<td class="ttr-bar ' + kind + '">'
+      + '<span class="fill" style="width:' + pct + '%"></span>'
+      + '<span class="val">' + ttrFmt(value) + '</span>'
+      + '</td>';
+  }
+  function ttrEmpty(msg) { return '<div class="ttr-empty">' + msg + '</div>'; }
+
+  function renderTTR(rangeKey) {
+    if (!ttrData) {
+      document.getElementById('ttrPipeline').innerHTML = ttrEmpty('Loading sales reports…');
+      return;
+    }
+    const winKey = TTR_RANGE_MAP[rangeKey] || '30d';
+    const win = ttrData.windows && ttrData.windows[winKey];
+    if (!win) {
+      document.getElementById('ttrPipeline').innerHTML = ttrEmpty('No data for this window.');
+      return;
+    }
+    document.getElementById('reportsRangeLabel').textContent = win.label;
+
+    // 1. Pipeline opportunity
+    renderTTRPipeline(win.pipeline_opportunity);
+    // 2. Sales activity
+    renderTTRActivity(win.sales_activity);
+    // 3. Lead source
+    renderTTRLeadSource(win.lead_source);
+    // 4. Salesperson performance
+    renderTTRSalesperson(win.salesperson);
+    // 5. Stale (constant — uses top-level)
+    renderTTRStale(ttrData.stale_opportunities);
+
+    document.getElementById('ttrMeta').textContent =
+      'Sales reports last refreshed: ' + (ttrData.generated_at || '—') + ' · window: ' + win.label;
+  }
+
+  function renderTTRPipeline(pr) {
+    const t = document.getElementById('ttrPipeline');
+    if (!pr || !pr.pipelines || pr.pipelines.length === 0) { t.innerHTML = ttrEmpty('No pipeline data.'); return; }
+    let html = '';
+    pr.pipelines.forEach(p => {
+      html += '<div class="ttr-pipeline-name">' + p.name + '</div>';
+      html += '<table class="ttr-table"><thead><tr><th>Sales Rep</th><th class="num">New</th><th class="num">Moved</th><th class="num">Lost</th><th class="num">Total Open</th></tr></thead><tbody>';
+      if (!p.reps || p.reps.length === 0) {
+        html += '<tr><td colspan="5" class="ttr-empty">No reps with activity</td></tr>';
+      } else {
+        const mNew = ttrMaxOf(p.reps, 'new');
+        const mMv = ttrMaxOf(p.reps, 'moved');
+        const mLs = ttrMaxOf(p.reps, 'lost');
+        const mOp = ttrMaxOf(p.reps, 'open');
+        p.reps.forEach(r => {
+          html += '<tr><td>' + (r.name || 'Unassigned') + '</td>'
+            + ttrBarCell(r.new, mNew, 'new')
+            + ttrBarCell(r.moved, mMv, 'moved')
+            + ttrBarCell(r.lost, mLs, 'lost')
+            + ttrBarCell(r.open, mOp, 'open')
+            + '</tr>';
+        });
+      }
+      html += '</tbody></table>';
+    });
+    t.innerHTML = html;
+  }
+
+  function renderTTRActivity(data) {
+    const t = document.getElementById('ttrSalesActivity');
+    if (!data || !data.rows || data.rows.length === 0) { t.innerHTML = ttrEmpty('No activity data.'); return; }
+    const mC = ttrMaxOf(data.rows, 'calls');
+    const mS = ttrMaxOf(data.rows, 'sms');
+    const mE = ttrMaxOf(data.rows, 'emails');
+    const mA = ttrMaxOf(data.rows, 'appointments');
+    let html = '<table class="ttr-table"><thead><tr><th>Sales Rep</th><th class="num">Calls</th><th class="num">SMS</th><th class="num">Emails</th><th class="num">Appointments</th></tr></thead><tbody>';
+    data.rows.forEach(r => {
+      html += '<tr><td>' + r.name + '</td>'
+        + ttrBarCell(r.calls, mC, 'calls')
+        + ttrBarCell(r.sms, mS, 'sms')
+        + ttrBarCell(r.emails, mE, 'emails')
+        + ttrBarCell(r.appointments, mA, 'appts')
+        + '</tr>';
+    });
+    html += '</tbody></table>';
+    t.innerHTML = html;
+  }
+
+  function renderTTRLeadSource(data) {
+    const t = document.getElementById('ttrLeadSource');
+    if (!data || !data.rows || data.rows.length === 0) { t.innerHTML = ttrEmpty('No lead source data.'); return; }
+    const mL = ttrMaxOf(data.rows, 'leads');
+    const mO = ttrMaxOf(data.rows, 'opportunities');
+    let html = '<table class="ttr-table"><thead><tr><th>Source</th><th class="num">Leads</th><th class="num">Opportunities Created</th></tr></thead><tbody>';
+    data.rows.forEach(r => {
+      html += '<tr><td>' + (r.source || '(none)') + '</td>'
+        + ttrBarCell(r.leads, mL, 'leads')
+        + ttrBarCell(r.opportunities, mO, 'opps')
+        + '</tr>';
+    });
+    html += '</tbody></table>';
+    t.innerHTML = html;
+  }
+
+  function renderTTRSalesperson(data) {
+    const t = document.getElementById('ttrSalesperson');
+    if (!data || !data.rows || data.rows.length === 0) { t.innerHTML = ttrEmpty('No salesperson data.'); return; }
+    const mC = ttrMaxOf(data.rows, 'created');
+    const mO = ttrMaxOf(data.rows, 'open');
+    const mL = ttrMaxOf(data.rows, 'lost');
+    const mA = ttrMaxOf(data.rows, 'activities');
+    let html = '<table class="ttr-table"><thead><tr><th>Sales Rep</th><th class="num">Opps Created</th><th class="num">Currently Open</th><th class="num">Lost</th><th class="num">Activities</th></tr></thead><tbody>';
+    data.rows.forEach(r => {
+      html += '<tr><td>' + r.name + '</td>'
+        + ttrBarCell(r.created, mC, 'created')
+        + ttrBarCell(r.open, mO, 'openq')
+        + ttrBarCell(r.lost, mL, 'lostq')
+        + ttrBarCell(r.activities, mA, 'activities')
+        + '</tr>';
+    });
+    html += '</tbody></table>';
+    t.innerHTML = html;
+  }
+
+  function renderTTRStale(data) {
+    const t = document.getElementById('ttrStale');
+    if (!data || data.length === 0) { t.innerHTML = ttrEmpty('No stale opportunities — nice work.'); return; }
+    let html = '<table class="ttr-table"><thead><tr><th>Opportunity</th><th>Pipeline</th><th>Stage</th><th>Sales Rep</th><th class="num">Days Stale</th></tr></thead><tbody>';
+    data.forEach(r => {
+      html += '<tr><td>' + (r.name || '—') + '</td><td>' + r.pipeline + '</td><td>' + r.stage + '</td><td>' + (r.assigned || 'Unassigned') + '</td><td class="num ttr-stale-badge">' + r.days_stale + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    t.innerHTML = html;
+  }
 
   // ── Init ──
   async function init() {
@@ -800,6 +1041,10 @@
     buildActivityFeed(lastRecentActivity);
     applyMetrics(metrics);
     initFeedScroll();
+
+    // Fetch and render TTR sales reports
+    await fetchTTRData();
+    renderTTR(activeRange);
   }
 
   init();
@@ -810,11 +1055,13 @@
       fetchHealth(),
       fetchPipelineData(getDateRange(activeRange)),
       fetchMetrics(getDateRange(activeRange)),
+      fetchTTRData(),
     ]);
     updateStatus(health);
     buildPipeline(pData);
     buildActivityFeed(lastRecentActivity);
     applyMetrics(metrics);
+    renderTTR(activeRange);
   }, 5 * 60 * 1000);
 
 })();
