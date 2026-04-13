@@ -485,8 +485,9 @@
     }
   }
 
-  function applyMetrics(m, totalLeads) {
+  function applyMetrics(m) {
     if (!m) return;
+    const totalLeads = (allPipelineData && allPipelineData.funnel) ? allPipelineData.funnel.leads : 0;
     animateCounter('mTotalLeads', totalLeads || 0);
     animateCounter('mQuotesTracked', m.quotes_tracked || 0);
     animateCounter('mFollowUps', m.follow_ups_sent || 0);
@@ -868,7 +869,7 @@
       ]);
       buildPipeline(pipelineData);
       buildActivityFeed(lastRecentActivity);
-      applyMetrics(metrics, pipelineData && pipelineData.funnel ? pipelineData.funnel.leads : 0);
+      applyMetrics(metrics);
       // TTR has its own tab set now — no cascade from top-level filter
     });
   });
@@ -1065,7 +1066,7 @@
     updateStatus(health);
     buildPipeline(pipelineData);
     buildActivityFeed(lastRecentActivity);
-    applyMetrics(metrics, pipelineData && pipelineData.funnel ? pipelineData.funnel.leads : 0);
+    applyMetrics(metrics);
     initFeedScroll();
 
     // Fetch and render TTR sales reports
@@ -1086,7 +1087,7 @@
     updateStatus(health);
     buildPipeline(pData);
     buildActivityFeed(lastRecentActivity);
-    applyMetrics(metrics, pData && pData.funnel ? pData.funnel.leads : 0);
+    applyMetrics(metrics);
     renderTTR(activeRange);
   }, 5 * 60 * 1000);
 
