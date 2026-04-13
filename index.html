@@ -65,6 +65,12 @@
   /* Main */
   .main { padding:20px 32px 32px; max-width:1400px; margin:0 auto; display:flex; flex-direction:column; gap:16px; }
 
+  /* TTR tab set */
+  .ttr-tabs { display:flex; gap:6px; margin-bottom:2px; }
+  .ttr-tab { padding:6px 14px; border-radius:6px; font-size:12px; font-weight:600; color:var(--text3); background:transparent; border:1px solid var(--border); cursor:pointer; transition:all 0.15s; }
+  .ttr-tab:hover { color:var(--text); border-color:var(--text3); }
+  .ttr-tab.active { color:var(--jobber); border-color:var(--jobber); background:var(--jobber-dim); }
+
   /* === Sales Performance Reports (TTR section) === */
   .ttr-section { padding:18px 0; border-bottom:1px solid var(--border); }
   .ttr-section:last-of-type { border-bottom:none; }
@@ -372,6 +378,13 @@
     <div class="card-head">
       <span class="card-title">Sales Performance Reports</span>
       <span class="badge info" id="reportsRangeLabel">All time</span>
+    </div>
+    <div class="ttr-tabs" id="ttrTabs">
+      <button class="ttr-tab active" data-ttr-range="all">All Time</button>
+      <button class="ttr-tab" data-ttr-range="ytd">2026 YTD</button>
+      <button class="ttr-tab" data-ttr-range="q1">Q1 2026</button>
+      <button class="ttr-tab" data-ttr-range="30d">Last 30d</button>
+      <button class="ttr-tab" data-ttr-range="7d">Last 7d</button>
     </div>
 
     <div class="ttr-section">
@@ -850,9 +863,16 @@
       buildPipeline(pipelineData);
       buildActivityFeed(lastRecentActivity);
       applyMetrics(metrics);
-      // Cascade to TTR sales reports
-      renderTTR(activeRange);
+      // TTR has its own tab set now — no cascade from top-level filter
     });
+  });
+
+  // TTR tab set — independent date filter for Sales Performance Reports
+  document.getElementById('ttrTabs').addEventListener('click', e => {
+    if (!e.target.classList.contains('ttr-tab')) return;
+    document.querySelectorAll('.ttr-tab').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    renderTTR(e.target.dataset.ttrRange);
   });
 
   // ============ SALES PERFORMANCE REPORTS (TTR) ============
