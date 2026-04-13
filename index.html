@@ -272,9 +272,9 @@
   <!-- Metrics -->
   <div class="metrics" id="metricsRow">
     <div class="metric">
-      <div class="metric-label">Events Synced</div>
-      <div class="metric-val" id="mEventsSynced">--</div>
-      <div class="metric-sub">Webhook events processed</div>
+      <div class="metric-label">Total Leads</div>
+      <div class="metric-val" id="mTotalLeads">--</div>
+      <div class="metric-sub">Pipeline opportunities</div>
     </div>
     <div class="metric">
       <div class="metric-label">Quotes Tracked</div>
@@ -483,16 +483,15 @@
     }
   }
 
-  function applyMetrics(m) {
+  function applyMetrics(m, totalLeads) {
     if (!m) return;
-    animateCounter('mEventsSynced', m.events_synced || 0);
+    animateCounter('mTotalLeads', totalLeads || 0);
     animateCounter('mQuotesTracked', m.quotes_tracked || 0);
     animateCounter('mFollowUps', m.follow_ups_sent || 0);
     animateCounter('mReviews', m.reviews_requested || 0);
 
     // Update percentage subtexts
-    const quotePct = m.events_synced > 0 ? (m.quotes_tracked / m.events_synced * 100).toFixed(1) : '0';
-    document.getElementById('mFollowUpsSub').textContent = (m.events_synced > 0 ? ((m.follow_ups_sent / m.quotes_tracked) * 100).toFixed(1) : '0') + '% of quotes';
+    document.getElementById('mFollowUpsSub').textContent = (m.quotes_tracked > 0 ? ((m.follow_ups_sent / m.quotes_tracked) * 100).toFixed(1) : '0') + '% of quotes';
     document.getElementById('mReviewsSub').textContent = (m.jobs_closed > 0 ? ((m.reviews_requested / m.jobs_closed) * 100).toFixed(1) : '0') + '% of completed jobs';
   }
 
@@ -862,7 +861,7 @@
       ]);
       buildPipeline(pipelineData);
       buildActivityFeed(lastRecentActivity);
-      applyMetrics(metrics);
+      applyMetrics(metrics, pipelineData && pipelineData.funnel ? pipelineData.funnel.leads : 0);
       // TTR has its own tab set now — no cascade from top-level filter
     });
   });
@@ -1059,7 +1058,7 @@
     updateStatus(health);
     buildPipeline(pipelineData);
     buildActivityFeed(lastRecentActivity);
-    applyMetrics(metrics);
+    applyMetrics(metrics, pipelineData && pipelineData.funnel ? pipelineData.funnel.leads : 0);
     initFeedScroll();
 
     // Fetch and render TTR sales reports
@@ -1080,7 +1079,7 @@
     updateStatus(health);
     buildPipeline(pData);
     buildActivityFeed(lastRecentActivity);
-    applyMetrics(metrics);
+    applyMetrics(metrics, pData && pData.funnel ? pData.funnel.leads : 0);
     renderTTR(activeRange);
   }, 5 * 60 * 1000);
 
