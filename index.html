@@ -767,7 +767,7 @@
       const valStr = item.value > 0 ? ' &mdash; <span class="feed-amount">$' + Math.round(item.value).toLocaleString() + '</span>' : '';
       const ts = item.timestamp ? timeAgo(new Date(item.timestamp)) : '';
       const isWin = item.stage_key === 'quote_approved' && item.value > 0;
-      const jobberUrl = item.jobber_client_id ? 'https://app.getjobber.com/clients/' + item.jobber_client_id : '';
+      const jobberUrl = item.jobber_client_id ? 'https://secure.getjobber.com/clients/' + item.jobber_client_id : '';
       const agmUrl = (ghlBaseUrl && item.contact_id) ? ghlBaseUrl + '/contacts/detail/' + item.contact_id : '';
       const contactUrl = jobberUrl || agmUrl;
       const nameHtml = contactUrl
